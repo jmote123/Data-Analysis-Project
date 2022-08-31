@@ -1,0 +1,500 @@
+---
+title: "Data Analysis Project"
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      message = FALSE, 
+                      warning = FALSE,
+                      comment = "")
+```
+
+
+
+# Student Information
+
+**Name**: Jyoti Mote
+**G Number**: G01287487
+
+
+
+
+# Introduction
+
+This semester we will be working with a dataset of all domestic outbound flights from Dulles International Airport in 2016.
+
+Airports depend on accurate flight departure and arrival estimates to maintain operations, profitability, customer satisfaction, and compliance with state and federal laws. Flight performance, including departure and arrival delays must be monitored, submitted to the Federal Aviation Agency (FAA) on a regular basis, and minimized to maintain airport operations. **The FAA considered a flight to be delayed if it has an arrival delay of at least 15 minutes**.
+
+The executives at Dulles International Airport have hired you as a Data Science consultant to perform an exploratory data analysis on all domestic flights from 2016 and produce an executive summary of your key insights and recommendations to the executive team.
+
+Before you begin, take a moment to read through the following airline flight terminology to familiarize yourself with the industry: [Airline Flight Terms](https://www.myairlineflight.com)
+
+
+
+## Dulles Flights Data
+
+The `flights_df` data frame is loaded below and consists of 33,433 flights from IAD (Dulles International) in 2016. The rows in this data frame represent a single flight with all of the associated features that are displayed in the table below.
+
+**Note**: If you have not installed the `tidyverse` package, please do so by going to the `Packages` tab in the lower right section of RStudio, select the `Install` button and type `tidyverse` into the prompt. If you cannot load the data, then try downloading the latest version of R (at least 4.0). The `readRDS()` function has different behavior in older versions of `R` and may cause loading issues.
+
+
+
+```{r}
+
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+
+flights_df <- readRDS(url('https://gmubusinessanalytics.netlify.app/data/dulles_flights.rds'))
+
+
+```
+
+
+### Raw Data
+
+```{r}
+
+flights_df
+
+#Filter data more than or equal to 15 mins for arrival delay
+
+df_15 <- flights_df %>% 
+  filter(arrival_delay>=15) 
+view(df_15)
+
+#Filter data more than or equal to 15 mins for departure delay
+
+dep_df_15 <- flights_df %>% 
+  filter(dep_delay>=15) 
+view(dep_df_15)
+
+```
+
+
+# Exploratory Data Analysis
+
+
+Executives at this company have hired you as a data science consultant to evaluate their flight data and make recommendations on flight operations and strategies for minimizing flight delays.
+
+You must think of **at least 8 relevant questions** that will provide evidence for your recommendations.
+
+The goal of your analysis should be discovering which variables drive the differences between flights that are early/on-time vs. flights that are delayed.
+
+Some of the many questions you can explore include:
+
+-   Are flight delays affected by taxi-out time? Do certain airlines or time of 
+    year lead to greater taxi out times (i.e. traffic jams on the runways)?
+
+-   Are certain times of the day or year problematic?
+
+-   Are certain destination or airlines prone to delays?
+
+
+You must answer each question and provide supporting data summaries with either a summary data frame (using `dplyr`/`tidyr`) or a plot (using `ggplot`) or both.
+
+In total, you must have a minimum of 5 plots and 4 summary data frames for the exploratory data analysis section. Among the plots you produce, you must have at least 4 different types (ex. box plot, bar chart,
+histogram, heat map, etc...)
+
+Each question must be answered with supporting evidence from your tables and plots.
+
+
+## Question 1
+
+Which month of the year causes more delayed flight?
+
+**Question**:
+
+Which month of the year causes more delayed flight?
+
+**Answer**:
+
+In this visualization it is seen that July month has the maximum delayed arrivals followed by June and then December. The least delays were in the month of January. By this we can analyse that mid year might have maximum delays, we can also see december being the third most but it could be high frenquency of flights during holiday season or harsh weather.
+
+
+To add additional R code chunks for your work, select `Insert` then `R` from the top of this notebook file.
+
+```{r}
+
+#line plot the month/ time of the year that caused maximum delay
+
+
+month_df <- df_15 %>% group_by(month) %>% summarize(arrival_delay = n())
+month_df
+View(month_df)
+
+ggplot(data = month_df, aes(x=month, y=arrival_delay, group = 1)) +
+  geom_line() +
+  ggtitle("Monthly arrival delays")
+ 
+
+
+
+```
+
+
+
+## Question 2
+
+
+
+**Question**:
+
+Which is the region with most and least flight delay?
+
+**Answer**:
+Out of the 6 regions namely West, South, Northeast, Midwest, SouthWest, Middle Atlantic, the region which has maximum flight delays is Midwest, and the region with leaset delay is West.
+
+
+
+```{r}
+
+
+# Bar plot for region with most and least flight delay
+
+  region_df <- df_15 %>% group_by(dest_airport_region) %>% summarize(Mean_arr_delay =   mean(arrival_delay, na.rm=TRUE))
+  region_df
+  View(region_df)
+  
+# Bar plot
+  region_p<-ggplot(data=region_df, aes(x=dest_airport_region, y=Mean_arr_delay)) +
+  geom_bar(stat="identity", fill="orange")+
+  geom_text(aes(label=round(Mean_arr_delay, digits = 2)), vjust=-0.3, size=3.5)+
+  ggtitle("Average delay time region wise")+
+  theme_minimal()
+  region_p
+  
+  
+
+
+
+```
+
+
+
+## Question 3
+
+
+
+**Question**:
+
+Which airlines have the maximum flight delay?
+
+**Answer**:
+
+The airlines which has maximum number of delayed flights  is SkyWest, and the flight which has least number of delayed flights is Virgin America.
+
+
+
+```{r}
+
+
+#Box Plot for  flight delayed caused by airlines
+airlines_df <- df_15 %>% group_by(airline) %>% summarise(Mean_arr_delay = mean(arrival_delay, na.rm=TRUE))
+airlines_df
+View(airlines_df)
+
+airlines_p <-ggplot(data = airlines_df, aes(x=airline, y=Mean_arr_delay, group = 1)) +
+  geom_line() +
+  ggtitle("Arlines vs Arrival delays")
+  airlines_p
+
+
+```
+
+
+
+
+## Question 4
+
+
+
+**Question**:
+
+Which days in the week have maximum and minimum delay?
+
+**Answer**:
+
+Saturday has the maximum delayed flights followed by Monday and the least delayed flights are on Friday. We can analyse that may be due to the weekend there may be more flights as people wight travel back and forth on the weekend which is causing maximum delay on the saturday and mondays, also another reason could be less staff during the weekend.
+
+
+```{r}
+
+# box plot for which days in the week have maximum and minimum delay
+
+#box plot
+
+ggplot(df_15, aes(x = weekday, y = arrival_delay, fill = weekday)) +
+  geom_boxplot(aes(fill=weekday)) +
+  scale_y_continuous(breaks = seq(0, 300, 25), limits = c(0,300)) +
+    ggtitle("Arrival delays per day")
+ 
+
+```
+
+
+
+
+## Question 5
+
+
+
+**Question**:
+
+How is departure delayed time related to arrival delayed time?
+
+**Answer**:
+
+As we can clearly see from the graph that departure delayed time is directly proportional to arrival delayed time.The obvious reason could be if a flight is delayed to depart, it will be delayed to arrive.
+
+
+
+```{r}
+
+#Scatter plot for relation between arrival delay and departure delay
+
+distance_p <- ggplot(df_15, aes(x = dep_delay, y = arrival_delay ))
+distance_p + geom_point()+
+  ggtitle("Arrival delays vs dep delay")+
+geom_smooth(method = "lm") 
+distance_p 
+
+```
+
+
+## Question 6
+
+
+
+**Question**:
+
+How does taxi_out time effect delayed flights?
+
+**Answer**:
+
+The Summary table shows that maximum mean taxi out time has Maximum mean arrival delay for Sky West airlines. We can say that time out can have a slight impact on the delayed flights. But for other airlines like Alaska taxi out time doesnt seem to have impacted much, other parameters like the taxi in and departure delay could be less for alaska.
+
+
+```{r}
+
+# Summary Data for relation between taxi_out and delayed arrivals by airline
+
+taxi_out_df <- df_15 %>% group_by(airline) %>% summarise(Mean_arr_delay = mean(arrival_delay),Mean_taxiout = mean(taxi_out)) %>% arrange(Mean_arr_delay, .by_group = TRUE) 
+taxi_out_df
+View(taxi_out_df)
+
+# 
+
+```
+
+
+## Question 7
+
+
+
+**Question**:
+
+Which Destination airport has maximum delayed flights?
+
+**Answer**:
+
+Looking at the bar plot we can clearly say that Fort Lauderdale Hollywood airport has the maximum delayed flights and Chicago OHare has the minimum delayed flights.
+
+
+```{r}
+
+#Summary table of the destination airport causing maximum delay
+ 
+
+ 
+ dest_df <- df_15 %>% group_by(dest_airport_name) %>% 
+   summarize(Mean_arr_delay = mean(arrival_delay, na.rm=TRUE)) %>% 
+   arrange(Mean_arr_delay, .by_group = TRUE)  %>% top_n(10)
+   View(dest_df)
+
+   
+# bar plot of the destination airport causing maximum delay
+   
+ dest_p<-ggplot(data=dest_df, aes(x=Mean_arr_delay, y=dest_airport_name)) +
+   geom_bar(stat="identity", fill="pink")+
+   geom_text(aes(label=round(Mean_arr_delay, digits = 2)), vjust=-0.5, size=3.5, hjust=1)+
+   theme_minimal()
+ dest_p
+ 
+
+
+
+```
+
+
+
+## Question 8
+
+
+**Question**:
+
+Which city in California has most delayed flight?
+
+**Answer**:
+
+Los Angeles has the most number of delayed flights followed by SanFrancisco.
+
+
+```{r}
+
+#Summary data on delayed arrivals for california state
+
+#Filtered data for california
+California_df <- filter(df_15,dest_airport_state=='California') 
+California_df
+ 
+Ailines_Cali_df <- California_df %>% group_by(dest_airport_city) %>% summarize(arrival_delay = n())
+View(Ailines_Cali_df)
+ 
+ 
+ #Connected scatter plot on delayed arrivals for california state
+ 
+ ggplot(data = Ailines_Cali_df, aes(x=dest_airport_city, y=arrival_delay, group = 1)) +
+ geom_line() +
+ geom_point(shape=21, color="black", fill="#69b3a2", size=6) +
+ ggtitle("City wise delayed arrivals in california")
+ 
+ 
+ 
+
+  
+
+
+```
+
+
+## Question 9
+
+ 
+
+**Question**:
+
+Which time of the day has most delayed flights? 
+
+**Answer**:
+Maximum delays happen in the evening at 17.07, followed by early mornings 7.08 and 6.90.
+
+```{r}
+
+
+
+#Summary data on which time of the day has most delayed flights
+
+ 
+Timeoftheday_df <- dep_df_15 %>% group_by(sch_dep_time) %>% summarize(Mean=mean(dep_delay)) %>% arrange(desc(Mean), .by_group = TRUE)  %>% top_n(10)
+Timeoftheday_df
+View(Timeoftheday_df)
+ 
+
+
+```
+
+
+# Summary of Results
+
+Flight delays are one of the most frustrating aspects of air travel. There can be many reasons for a flight to be delayed mainly because a lot of people and processes are involved. Bad weather, excessive air traffic, sometimes refueling or technical issues can also cause a delay in the flights. This data analysis was performed to understand the parameters that cause the delay and what we can do to reduce the frequency of delayed flights.
+
+Key Findings:
+
+1.
+
+Write an executive summary of your overall findings and recommendations to the executives at Dulles Airport. Think of this section as your closing remarks of a presentation, where you summarize your key findings and make recommendations on flight operations and strategies for minimizing flight delays.
+
+Your executive summary must be written in a [professional tone](https://www.universalclass.com/articles/writing/business-writing/appropriate-tone-in-business-communications.htm), with minimal grammatical errors, and should include the following
+sections:
+
+1.  An introduction where you explain the business problem and goals of your data analysis
+
+    -   What problem(s) is this company trying to solve? Why are they important
+        to their future success?
+
+    -   What was the goal of your analysis? What questions were you 
+        trying to answer and why do they matter?
+
+
+2.  Highlights and key findings from your Exploratory Data Analysis section
+
+    -   What were the interesting findings from your analysis and
+        **why are they important for the business**?
+
+    -   This section is meant to **establish the need for your recommendations** 
+        in the following section
+        
+
+3.  Your recommendations to the company
+
+    -   Each recommendation must be supported by your data analysis results
+
+    -   You must clearly explain **why** you are making each recommendation and which results 
+        from your data analysis support this recommendation
+
+    -   You must also describe the potential business impact of your recommendation:
+
+        -   Why is this a good recommendation?
+
+        -   What benefits will the business achieve?
+      
+
+
+## Executive Summary
+
+Please write your executive summary below. If you prefer, you can type your summary in a text editor, such as Microsoft Word, and paste your final text here.
+
+
+
+#Introduction:
+
+First data analysis and Visualization was to check  which month of the year causes more delayed flight. The month of July has the most delayed arrivals, followed by June and December. The month of January saw the fewest delays. We can deduce that the greatest delays occur in the middle of the year; we can also deduce that December has the third highest number of delays, however this might be due to a high frequency of flights during the holiday season or severe weather. 
+
+The company is trying to solve the problem of flight delays in order to increase efficiency and provide better customer experience. The goal of my analysis is to find identify the problems which causes flight delays and making necessary recommendations to overcome that problem. The questions I am trying to answer are listed below:
+
+Which month of the year causes more delayed flight?
+
+Which is the region with most and least flight delay?
+
+Which airlines have the maximum flight delay?
+
+Which days in the week have maximum and minimum delay?
+
+How is departure delayed time related to arrival delayed time?
+
+How does taxi_out time effect delayed flights?
+
+Which Destination airport has maximum delayed flights?
+
+Which city in California has most delayed flight?
+
+Which time of the day has most delayed flights? 
+
+
+Answering these questions matters because airline companies can increase their flight operation efficiency to gain their customer experience and brand value which finally results in higher profits.
+
+#Key Findings:
+
+The region with the most flight delays is Midwest, while the region with the least flight delays is West. The airlines SkyWest had the most delays, while Virgin America has the fewest. Saturday has the most delayed flights, followed by Monday, while Friday has the least delayed flights. We may deduce that there are more flights on weekends because people go back and forth, producing the most delays on Saturdays and Mondays. Another explanation could be because there are less employees on weekends. The departure delayed time is exactly related to arrival delayed time. The most apparent explanation is that if a flight is delayed departing, it will be delayed arrival. The maximum average cab out time is Sky West airlines' maximum average arrival time. We may suggest that taking a time break may have a minor influence on flight delays. However, other airlines such as Alaska appear to have had no influence on taxi out time, while other metrics such as taxi in and departure delay may have been less for Alaska. The most delayed flights are in Fort Lauderdale Hollywood Airport, while the least delayed planes are in Chicago OHare. Los Angeles has the most number of delayed flights followed by SanFrancisco. Maximum delays happen in the evening at 17.07, followed by early mornings 7.08 and 6.90, few people travel after they finish the work which is why there could be a delay around evening closing business hours this may be due to a lot of people travel early mornings because the flights will be much cheaper compared to later in the day.
+
+#Recommendations:
+
+From the above exploratory analysis we can make some changes to the operations going on in Dulles to decrease the arrival delay of the flights, some of these recommendations include increase in the number of terminals, staff, adding additional runways. Many of the delays are occurred due to the taxi in and taxi out times which is the reason why the ground staff should be increased for the operations to be done efficiently. As arrivals delays are directly proportional to departure delays, there should be a proper schedule at departure so that there won’t be delays. The destination airports should make the runways available as soon as the flight enters the respective airspace which results in decrease in flight times which finally results in decrease in arrival delay. The air traffic controllers at Dulles should be able to make an efficient plan to  equip an incoming flight with an open runway. The scheduled departure time should be efficiently managed considering the factors of weather and air traffic at destination airport.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
